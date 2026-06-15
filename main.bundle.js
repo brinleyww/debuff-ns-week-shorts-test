@@ -8991,7 +8991,7 @@
                     i.get(this, _, "f").appendChild(m),
                     i.set(this, C, document.createElement("button"), "f"),
                     i.get(this, C, "f").className = "button official selected",
-                    i.get(this, C, "f").append(document.createTextNode(i.get(this, b, "f").get("Official tracks"))),
+                    i.get(this, C, "f").append(document.createTextNode("Not So Weekly Shorts")),
                     i.get(this, C, "f").addEventListener("click", ( () => {
                         i.get(this, w, "f").playUIClick(),
                         i.get(this, v, "m", Q).call(this, "official")
@@ -52083,7 +52083,7 @@
                 $h.set(this, void 0),
                 ed.set(this, []),
                 C.set(this, $h, t, "f");
-                Promise.all(["summer1.track","summer2.track","summer3.track","summer4.track","summer5.track","summer6.track","summer7.track"].map((t=>C.get(this,Qh,"m",td).call(this,t,e)))).then((e=>{C.set(this,Jh,e,"f")
+                Promise.all(["summer1.track","summer2.track","summer3.track","summer4.track","summer5.track"].map((t=>C.get(this,Qh,"m",td).call(this,t,e)))).then((e=>{C.set(this,Jh,e,"f")
                 }
                 )).catch((e => {
                     console.error(e)

@@ -8856,7 +8856,7 @@
                 const A = i.get(this, x, "f").getRecordTime(i.get(this, k, "f").profileSlot, s)
                   , v = document.createElement("div");
                 if (v.className = "record",
-                v.textContent = null != A ? "*secret*" : i.get(this, b, "f").get("No record"),
+                v.textContent = null != A ? X.A.formatTimeString(A) : i.get(this, b, "f").get("No record"),
                 u.appendChild(v),
                 null != l) {
                     const e = document.createElement("button");
@@ -40520,7 +40520,7 @@
             }
             setRecord(e) {
                 null == e ? (C.get(this, qn, "f").textContent = C.get(this, jn, "f").get("No record"),
-                C.get(this, Qn, "f").textContent = "") : (C.get(this, qn, "f").textContent = "*secret*",
+                C.get(this, Qn, "f").textContent = "") : (C.get(this, qn, "f").textContent = Ve.A.formatTimeString(e.time),
                 C.get(this, Qn, "f").textContent = "",
                 e.position.then((e => {
                     null != e ? (C.get(this, Qn, "f").textContent = Ke(e),
@@ -49294,7 +49294,7 @@
             n.innerHTML = '<img src="images/timer.svg">';
             const i = document.createElement("span");
             null == e && (i.className = "faded"),
-            i.textContent = "*secret*",
+            i.textContent = null == e ? C.get(this, zo, "f").get("No record") : Ve.A.formatTimeString(e),
             n.appendChild(i),
             C.get(this, Vo, "f").appendChild(n);
             const r = document.createElement("div");

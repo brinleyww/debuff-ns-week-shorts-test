@@ -52044,7 +52044,7 @@
                 )),
                 C.set(this, Xh, [{
                     id: "8a12fc3f6ae6bc9fb3d60b8fd56944478e5634f14221ecd91a2a4177106b531a",
-                    group: "0.6.0",
+                    group: "Week 1",
                     trackMetadata: {
                         name: "1 - race",
                         author: "Cookedbyapringle",
@@ -52055,7 +52055,7 @@
                     thumbnail: "tracks/community/thumbnails/marvelous_marble.png"
                 }, {
                     id: "2909df017040a62807141541da1ec9c2839437bd75a6f882e1609c71ae461b5c",
-                    group: "0.6.0",
+                    group: "Week 1",
                     trackMetadata: {
                         name: "2 - trek",
                         author: "Cookedbyapringle",
@@ -52066,7 +52066,7 @@
                     thumbnail: "tracks/community/thumbnails/arx_lucida.png"
                 }, {
                     id: "84e8bca12bc7a171e44d4bf377c4abe130a4f2427d8e24b11f62334326deaa3b",
-                    group: "0.6.0",
+                    group: "Week 1",
                     trackMetadata: {
                         name: "3 - maze",
                         author: "Cookedbyapringle",
@@ -52077,7 +52077,7 @@
                     thumbnail: "tracks/community/thumbnails/koselig.png"
                 }, {
                     id: "0f5e7f9d5bc9806f7ddf46c874909954aa72604299a7d1dd7e5b364080d9d63f",
-                    group: "0.6.0",
+                    group: "Week 1",
                     trackMetadata: {
                         name: "4 - speeeedddd",
                         author: "Cookedbyapringle",
@@ -52088,7 +52088,7 @@
                     thumbnail: "tracks/community/thumbnails/sky_bound.png"
                 }, {
                     id: "05712abed8a0bf53c32c81489769705a7beb1cbd75f84400d50ef1d270fb416e",
-                    group: "0.6.0",
+                    group: "Week 1",
                     trackMetadata: {
                         name: "5 - nosebonkkk",
                         author: "Cookedbyapringle",

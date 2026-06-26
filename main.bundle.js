@@ -49073,7 +49073,7 @@
             m.textContent = Qe(e),
             g.appendChild(m);
             const A = document.createElement("p");
-            A.textContent = "SECRET",
+            A.textContent = "haha its secret",
             f.appendChild(A);
             const v = document.createElement("div");
             v.className = "right",
@@ -51371,12 +51371,6 @@
                 ))),
                 C.get(this, Ec, "f").src = "images/logo.svg",
                 C.get(this, kc, "f").appendChild(C.get(this, Ec, "f"));
-                {
-                    const subtitle = document.createElement("div");
-                    subtitle.textContent = "CHANGE YOUR USERNAME IN THE GARAGE TO BE RANKED",
-                    subtitle.style.cssText = "margin:18px auto 0 auto;max-width:900px;font-size:22px;font-weight:bold;color:var(--text-color);text-align:center;letter-spacing:1px;",
-                    C.get(this, kc, "f").appendChild(subtitle)
-                }
                 _o() || Ro() ? (C.set(this, zc, document.createElement("div"), "f"),
                 C.get(this, zc, "f").className = "warning-message",
                 _o() && C.get(this, zc, "f").classList.add("modded"),
@@ -51409,7 +51403,13 @@
                 C.get(this, vc, "m", Kc).call(this, e),
                 C.set(this, Nc, document.createElement("div"), "f"),
                 C.get(this, Nc, "f").className = "main-buttons-container hidden",
-                C.get(this, kc, "f").appendChild(C.get(this, Nc, "f")),
+                C.get(this, kc, "f").appendChild(C.get(this, Nc, "f"));
+                {
+                    const subtitle = document.createElement("div");
+                    subtitle.textContent = "CHANGE YOUR USERNAME IN THE GARAGE TO BE RANKED",
+                    subtitle.style.cssText = "width:100%;margin:0 0 20px 0;font-size:22px;font-weight:bold;color:var(--text-color);text-align:center;letter-spacing:1px;order:-1;",
+                    C.get(this, Nc, "f").prepend(subtitle)
+                }
                 C.set(this, Bc, document.createElement("div"), "f"),
                 C.get(this, Bc, "f").className = "button-bar",
                 C.get(this, kc, "f").appendChild(C.get(this, Bc, "f")),

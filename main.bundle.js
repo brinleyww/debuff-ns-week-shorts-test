@@ -49083,6 +49083,7 @@
             g.appendChild(m);
             const A = document.createElement("p");
             A.textContent = "SECRET",
+            A.className = "nsws-secret",
             f.appendChild(A);
             const v = document.createElement("div");
             v.className = "right",
@@ -51491,6 +51492,9 @@
                 d.style.cssText = "position:fixed;top:10px;right:14px;z-index:9998;font-size:11px;color:rgba(200,210,255,0.5);text-align:right;pointer-events:auto;line-height:1.5;font-family:inherit;";
                 d.innerHTML = "Not the official version. &nbsp;<a href=\"https://www.crazygames.com/game/polytrack\" target=\"_blank\" style=\"color:rgba(120,170,255,0.7);text-decoration:underline;\">Play official here</a>";
                 document.body.appendChild(d);
+                const ds = document.createElement("style");
+                ds.textContent = "body:has(.track-info-ui) #nsws-disclaimer { display: none !important; } .leaderboard-ui .nsws-secret { font-size: 14px !important; padding: 2px 12px 10px !important; opacity: 0.45; letter-spacing: 1.5px; }";
+                document.head.appendChild(ds);
             }
         }
         ,

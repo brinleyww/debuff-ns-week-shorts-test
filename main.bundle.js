@@ -51196,22 +51196,31 @@ window.__nswsDecrypt = async function(b64Data) {
                 stBtn.addEventListener("click", () => {
                     n.playUIClick();
                     document.getElementById("nsws-standings-overlay").style.display = "flex";
-                    window.__nswsStandingsLoad && window.__nswsStandingsLoad();
+                    // Default to the most recent week the first time this is opened this session;
+                    // afterwards, re-opening remembers whatever week was last selected.
+                    if (window.__nswsStandingsSelectedWeek == null) {
+                        window.__nswsStandingsSelectedWeek = window.__nswsMaxWeek;
+                    }
+                    window.__nswsStandingsLoad && window.__nswsStandingsLoad(window.__nswsStandingsSelectedWeek);
                 });
                 C.get(this, Nc, "f").appendChild(stBtn);
                 C.get(this, Dc, "f").push(stBtn);
 
                 // ── STANDINGS OVERLAY ──
                 if (!document.getElementById("nsws-standings-overlay")) {
-                    const LB_TRACKS = [
-                        { id:"8a5c37b4840713ca9d8c71f7c8bde514f6f63e695914b4edcd70a3fdd7930ee0", name:"1 - Can't Crash Now!" },
-                        { id:"68dedebe6eeed293775cc8593ad14e6070a0529dbc7acceec7441c844e41838e", name:"2 - Twisty Twasty" },
-                        { id:"9af28cca21b8eeb207055536883512df85c6ab31ed380058fec290b6f765e469", name:"3 - A Ternary Trio" },
-                        { id:"7216b418fb57f0a4b2c2f8083caaa1fc1e54563e9cda00bd85bdea61075d7db2", name:"4 - faht" },
-                        { id:"c9c0977d2d40c589420482020762af2a09cdf1aa372807377b6fcdeb48bc714d", name:"5 - antiAO8" },
-                    ];
                     const LOG102 = Math.log10(2);
                     const stCalcPts = r => r ? Math.round(20000 / Math.pow(r, LOG102)) : 0;
+                    const stAutoShort = name => {
+                        const base = name.replace(/^\d+\s*-\s*/, "").trim();
+                        const words = base.split(/\s+/).filter(Boolean);
+                        return words.length > 1 ? words.map(w => w[0].toUpperCase()).join("").slice(0, 5) : base.slice(0, 5);
+                    };
+                    // Weeks available for standings, most recent first. Adding a new week to
+                    // __nswsWeeks (e.g. week 3) is all that's needed for it to show up here
+                    // automatically, become the new default, and push older weeks into the
+                    // "past weeks" part of the dropdown.
+                    const stWeeksSorted = () => [...__nswsWeeks].sort((a, b) => b.week - a.week);
+                    const stTracksForWeek = week => (__nswsWeeks.find(w => w.week === week)?.tracks) ?? [];
 
                     // Overlay backdrop
                     const overlay = document.createElement("div");
@@ -51245,10 +51254,82 @@ window.__nswsDecrypt = async function(b64Data) {
 
                     // Header bar
                     const panelHdr = document.createElement("div");
-                    panelHdr.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:16px 24px 14px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;background:var(--surface-secondary-color);";
-                    const panelTitle = document.createElement("span");
-                    panelTitle.textContent = "Week 2 — Standings";
-                    panelTitle.style.cssText = "font-size:32px;font-weight:400;color:var(--text-color);letter-spacing:0;";
+                    panelHdr.style.cssText = "display:flex;align-items:center;justify-content:space-between;padding:16px 24px 14px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;background:var(--surface-secondary-color);position:relative;";
+
+                    // ── Week dropdown (replaces the static "Week 2 — Standings" title) ──
+                    const weekDropdownWrap = document.createElement("div");
+                    weekDropdownWrap.style.cssText = "position:relative;";
+                    const weekTrigger = document.createElement("button");
+                    weekTrigger.id = "nsws-week-trigger";
+                    weekTrigger.style.cssText = "display:flex;align-items:center;gap:12px;background:none;border:none;cursor:pointer;padding:4px 0;font-family:inherit;";
+                    const weekTriggerLabel = document.createElement("span");
+                    weekTriggerLabel.style.cssText = "font-size:32px;font-weight:400;color:var(--text-color);letter-spacing:0;";
+                    const weekTriggerArrow = document.createElement("span");
+                    weekTriggerArrow.textContent = "▾";
+                    weekTriggerArrow.style.cssText = "font-size:18px;color:var(--text-color);opacity:0.5;transition:transform 0.15s ease-in-out;display:inline-block;";
+                    weekTrigger.appendChild(weekTriggerLabel);
+                    weekTrigger.appendChild(weekTriggerArrow);
+                    weekDropdownWrap.appendChild(weekTrigger);
+
+                    const weekMenu = document.createElement("div");
+                    weekMenu.id = "nsws-week-menu";
+                    weekMenu.style.cssText = "display:none;position:absolute;top:calc(100% + 10px);left:0;min-width:200px;background:var(--surface-color);border:1px solid rgba(255,255,255,0.12);z-index:10001;clip-path:polygon(0 0,100% 0,calc(100% - 8px) 100%,0 100%);box-shadow:0 12px 28px rgba(0,0,0,0.5);overflow:hidden;";
+                    weekDropdownWrap.appendChild(weekMenu);
+
+                    let weekMenuOpen = false;
+                    function closeWeekMenu() {
+                        weekMenuOpen = false;
+                        weekMenu.style.display = "none";
+                        weekTriggerArrow.style.transform = "rotate(0deg)";
+                    }
+                    function openWeekMenu() {
+                        weekMenuOpen = true;
+                        weekMenu.style.display = "block";
+                        weekTriggerArrow.style.transform = "rotate(180deg)";
+                    }
+                    weekTrigger.addEventListener("click", e => {
+                        e.stopPropagation();
+                        weekMenuOpen ? closeWeekMenu() : openWeekMenu();
+                    });
+                    document.addEventListener("click", e => {
+                        if (weekMenuOpen && !weekDropdownWrap.contains(e.target)) closeWeekMenu();
+                    });
+
+                    function renderWeekMenu(selectedWeek) {
+                        weekMenu.innerHTML = "";
+                        stWeeksSorted().forEach(w => {
+                            const isCurrent = w.week === window.__nswsMaxWeek;
+                            const isSelected = w.week === selectedWeek;
+                            const item = document.createElement("button");
+                            item.style.cssText = [
+                                "display:flex","align-items:center","justify-content:space-between",
+                                "width:100%","padding:12px 18px","background:" + (isSelected ? "rgba(80,180,255,0.12)" : "transparent"),
+                                "border:none","border-bottom:1px solid rgba(255,255,255,0.06)",
+                                "color:var(--text-color)","font-size:18px","font-family:inherit",
+                                "cursor:pointer","text-align:left",
+                            ].join(";");
+                            item.addEventListener("mouseover", () => { item.style.background = "rgba(80,130,230,0.15)"; });
+                            item.addEventListener("mouseout", () => { item.style.background = isSelected ? "rgba(80,180,255,0.12)" : "transparent"; });
+                            const label = document.createElement("span");
+                            label.textContent = "Week " + w.week;
+                            item.appendChild(label);
+                            if (isCurrent) {
+                                const badge = document.createElement("span");
+                                badge.textContent = "CURRENT";
+                                badge.style.cssText = "font-size:11px;opacity:0.5;letter-spacing:0.5px;";
+                                item.appendChild(badge);
+                            }
+                            item.addEventListener("click", () => {
+                                window.__nswsStandingsSelectedWeek = w.week;
+                                closeWeekMenu();
+                                stLoad(w.week);
+                            });
+                            weekMenu.appendChild(item);
+                        });
+                    }
+
+                    panelHdr.appendChild(weekDropdownWrap);
+
                     const hdrRight = document.createElement("div");
                     hdrRight.style.cssText = "display:flex;align-items:center;gap:14px;";
                     const updatedEl = document.createElement("span");
@@ -51257,23 +51338,15 @@ window.__nswsDecrypt = async function(b64Data) {
                     const closeBtn = document.createElement("button");
                     closeBtn.textContent = "✕";
                     closeBtn.style.cssText = "background:none;border:none;color:var(--text-color);opacity:0.6;font-size:20px;cursor:pointer;width:32px;height:32px;display:flex;align-items:center;justify-content:center;";
-                    closeBtn.addEventListener("click", () => { overlay.style.display = "none"; });
+                    closeBtn.addEventListener("click", () => { overlay.style.display = "none"; closeWeekMenu(); });
                     hdrRight.appendChild(updatedEl);
                     hdrRight.appendChild(closeBtn);
-                    panelHdr.appendChild(panelTitle);
                     panelHdr.appendChild(hdrRight);
                     panel.appendChild(panelHdr);
 
-                    // Column headers
+                    // Column headers (rebuilt per-week since track counts/names differ)
                     const colHdr = document.createElement("div");
-                    colHdr.style.cssText = "display:grid;grid-template-columns:56px 1fr repeat(6,88px);gap:0;padding:8px 24px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;background:var(--surface-secondary-color);";
-                    const colLabels = ["#", "Player", "Total", "CCN", "TT", "ATT", "faht", "AO8"];
-                    colLabels.forEach((lbl, i) => {
-                        const c = document.createElement("span");
-                        c.textContent = lbl;
-                        c.style.cssText = "font-size:13px;letter-spacing:0;color:var(--text-color);opacity:0.4;font-weight:400;text-align:" + (i <= 1 ? "left" : "right") + ";";
-                        colHdr.appendChild(c);
-                    });
+                    colHdr.style.cssText = "display:grid;gap:0;padding:8px 24px;border-bottom:1px solid rgba(255,255,255,0.08);flex-shrink:0;background:var(--surface-secondary-color);";
                     panel.appendChild(colHdr);
 
                     // Scrollable list
@@ -51290,9 +51363,31 @@ window.__nswsDecrypt = async function(b64Data) {
                     document.body.appendChild(overlay);
 
                     // Close on backdrop click
-                    overlay.addEventListener("click", e => { if (e.target === overlay) overlay.style.display = "none"; });
+                    overlay.addEventListener("click", e => { if (e.target === overlay) { overlay.style.display = "none"; closeWeekMenu(); } });
 
-                    async function stLoad() {
+                    let stCurrentWeek = null;
+                    let stRefreshInterval = null;
+
+                    async function stLoad(week) {
+                        if (week == null) week = window.__nswsStandingsSelectedWeek ?? window.__nswsMaxWeek;
+                        stCurrentWeek = week;
+                        const LB_TRACKS = stTracksForWeek(week).map(t => ({ id: t.id, name: t.name, short: t.short || stAutoShort(t.name) }));
+
+                        weekTriggerLabel.textContent = "Week " + week + " — Standings";
+                        renderWeekMenu(week);
+
+                        // Rebuild the column headers/grid for this week's track count
+                        const gridTemplate = "56px 1fr repeat(" + (LB_TRACKS.length + 1) + ",88px)";
+                        colHdr.style.gridTemplateColumns = gridTemplate;
+                        colHdr.innerHTML = "";
+                        const colLabels = ["#", "Player", "Total", ...LB_TRACKS.map(t => t.short)];
+                        colLabels.forEach((lbl, i) => {
+                            const c = document.createElement("span");
+                            c.textContent = lbl;
+                            c.style.cssText = "font-size:13px;letter-spacing:0;color:var(--text-color);opacity:0.4;font-weight:400;text-align:" + (i <= 1 ? "left" : "right") + ";";
+                            colHdr.appendChild(c);
+                        });
+
                         listWrap.innerHTML = '<div style="color:var(--text-color);opacity:0.4;font-size:20px;padding:30px 8px;">Loading...</div>';
                         updatedEl.textContent = "";
                         try {
@@ -51301,9 +51396,13 @@ window.__nswsDecrypt = async function(b64Data) {
                                     fetch("https://ptproxy.cwcinc.dev/v6/leaderboard?version=0.6.2&trackId=" + t.id + "&skip=0&amount=500&onlyVerified=false")
                                         .then(r => r.json())
                                 )),
-                                fetch("https://ptproxy.cwcinc.dev/v6/leaderboardUserEntry?version=0.6.2&trackId=" + LB_TRACKS[0].id + "&userTokenHash=" + (window.__nswsUserToken || "") + "&onlyVerified=false")
-                                    .then(r => r.json()).catch(() => null)
+                                LB_TRACKS.length > 0
+                                    ? fetch("https://ptproxy.cwcinc.dev/v6/leaderboardUserEntry?version=0.6.2&trackId=" + LB_TRACKS[0].id + "&userTokenHash=" + (window.__nswsUserToken || "") + "&onlyVerified=false")
+                                        .then(r => r.json()).catch(() => null)
+                                    : Promise.resolve(null)
                             ]);
+                            // Bail out if the user switched weeks again while this was in flight
+                            if (stCurrentWeek !== week) return;
                             const selfNick = selfEntry && selfEntry.entry ? (selfEntry.entry.nickname || "").trim() : (window.__nswsSelfNick || "");
                             const maps = results.map(data => {
                                 const entries = Array.isArray(data) ? data : (data.entries || []);
@@ -51331,10 +51430,9 @@ window.__nswsDecrypt = async function(b64Data) {
                                 const isTop3 = i < 3;
                                 const isSelf = selfNick && nick.toLowerCase() === selfNick.toLowerCase();
                                 const baseBg = isTop3 ? "rgba(255,215,0,0.07)" : isSelf ? "rgba(80,180,255,0.1)" : "transparent";
-                                const baseBorder = isTop3 ? "1px solid rgba(255,215,0,0.1)" : isSelf ? "1px solid rgba(80,180,255,0.35)" : "1px solid transparent";
                                 row.style.cssText = [
                                     "display:grid",
-                                    "grid-template-columns:56px 1fr repeat(6,88px)",
+                                    "grid-template-columns:" + gridTemplate,
                                     "gap:0",
                                     "padding:10px 8px",
                                     "border-radius:0",
@@ -51379,11 +51477,15 @@ window.__nswsDecrypt = async function(b64Data) {
                             if (!sorted.length) listWrap.innerHTML = '<div style="color:rgba(150,180,255,0.4);font-size:20px;padding:30px 8px;">No runs yet.</div>';
                             updatedEl.textContent = "Updated " + new Date().toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"});
                         } catch(e) {
-                            listWrap.innerHTML = '<div style="color:rgba(255,120,120,0.7);font-size:18px;padding:20px 8px;">Failed to load standings.</div>';
+                            if (stCurrentWeek === week) {
+                                listWrap.innerHTML = '<div style="color:rgba(255,120,120,0.7);font-size:18px;padding:20px 8px;">Failed to load standings.</div>';
+                            }
                         }
                     }
                     window.__nswsStandingsLoad = stLoad;
-                    setInterval(() => { stLoad(); }, 60000);
+                    if (stRefreshInterval == null) {
+                        stRefreshInterval = setInterval(() => { if (overlay.style.display !== "none") stLoad(stCurrentWeek); }, 60000);
+                    }
                 }
             })(),
             C.get(this, Nc, "f").appendChild(T),
@@ -52229,14 +52331,14 @@ window.__nswsDecrypt = async function(b64Data) {
             chunks: ["2c7ce662402e8e48", "9a8174de46651153", "edd131c2563262cb", "39f1958b3bea918e"],
             masks: ["700fbdd5827fac5c", "0ced81a7148f4d8a", "73f2b2f5921d7021", "d24bb1c10227d0ec"],
             file: "tracks/community/week1.track",
-            tracks: [{ id: "8a12fc3f6ae6bc9fb3d60b8fd56944478e5634f14221ecd91a2a4177106b531a", contentId: "05712abed8a0bf53c32c81489769705a7beb1cbd75f84400d50ef1d270fb416e", name: "1 - race", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_1.png" }, { id: "2909df017040a62807141541da1ec9c2839437bd75a6f882e1609c71ae461b5c", contentId: "0f5e7f9d5bc9806f7ddf46c874909954aa72604299a7d1dd7e5b364080d9d63f", name: "2 - trek", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_2.png" }, { id: "84e8bca12bc7a171e44d4bf377c4abe130a4f2427d8e24b11f62334326deaa3b", contentId: "84e8bca12bc7a171e44d4bf377c4abe130a4f2427d8e24b11f62334326deaa3b", name: "3 - maze", author: "Not So Weekly Shorts", env: "Winter", thumb: "tracks/community/thumbnails/week1_3.png" }, { id: "0f5e7f9d5bc9806f7ddf46c874909954aa72604299a7d1dd7e5b364080d9d63f", contentId: "2909df017040a62807141541da1ec9c2839437bd75a6f882e1609c71ae461b5c", name: "4 - speeeedddd", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week1_4.png" }, { id: "05712abed8a0bf53c32c81489769705a7beb1cbd75f84400d50ef1d270fb416e", contentId: "8a12fc3f6ae6bc9fb3d60b8fd56944478e5634f14221ecd91a2a4177106b531a", name: "5 - nosebonkkk", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_5.png" }]
+            tracks: [{ id: "8a12fc3f6ae6bc9fb3d60b8fd56944478e5634f14221ecd91a2a4177106b531a", contentId: "05712abed8a0bf53c32c81489769705a7beb1cbd75f84400d50ef1d270fb416e", name: "1 - race", short: "Race", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_1.png" }, { id: "2909df017040a62807141541da1ec9c2839437bd75a6f882e1609c71ae461b5c", contentId: "0f5e7f9d5bc9806f7ddf46c874909954aa72604299a7d1dd7e5b364080d9d63f", name: "2 - trek", short: "Trek", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_2.png" }, { id: "84e8bca12bc7a171e44d4bf377c4abe130a4f2427d8e24b11f62334326deaa3b", contentId: "84e8bca12bc7a171e44d4bf377c4abe130a4f2427d8e24b11f62334326deaa3b", name: "3 - maze", short: "Maze", author: "Not So Weekly Shorts", env: "Winter", thumb: "tracks/community/thumbnails/week1_3.png" }, { id: "0f5e7f9d5bc9806f7ddf46c874909954aa72604299a7d1dd7e5b364080d9d63f", contentId: "2909df017040a62807141541da1ec9c2839437bd75a6f882e1609c71ae461b5c", name: "4 - speeeedddd", short: "Speed", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week1_4.png" }, { id: "05712abed8a0bf53c32c81489769705a7beb1cbd75f84400d50ef1d270fb416e", contentId: "8a12fc3f6ae6bc9fb3d60b8fd56944478e5634f14221ecd91a2a4177106b531a", name: "5 - nosebonkkk", short: "Bonk", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week1_5.png" }]
         },
         {
             week: 2,
             chunks: ["e59bd41a50bf6973", "659f36fb285d2c47", "1403efd311ece1e1", "03a190c6b41f2039"],
             masks: ["3c4464a7952794bf", "36ebb67e80fde44f", "996fd0697626fdc1", "49e07f8faa99deee"],
             file: "tracks/community/week2.track",
-            tracks: [{ id: "8a5c37b4840713ca9d8c71f7c8bde514f6f63e695914b4edcd70a3fdd7930ee0", name: "1 - Can't Crash Now!", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_1.png" }, { id: "68dedebe6eeed293775cc8593ad14e6070a0529dbc7acceec7441c844e41838e", name: "2 - Twisty Twasty", author: "Not So Weekly Shorts", env: "Winter", thumb: "tracks/community/thumbnails/week2_2.png" }, { id: "9af28cca21b8eeb207055536883512df85c6ab31ed380058fec290b6f765e469", name: "3 - A Ternary Trio", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_3.png" }, { id: "7216b418fb57f0a4b2c2f8083caaa1fc1e54563e9cda00bd85bdea61075d7db2", name: "4 - faht", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week2_4.png" }, { id: "c9c0977d2d40c589420482020762af2a09cdf1aa372807377b6fcdeb48bc714d", name: "5 - antiAO8", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_5.png" }]
+            tracks: [{ id: "8a5c37b4840713ca9d8c71f7c8bde514f6f63e695914b4edcd70a3fdd7930ee0", name: "1 - Can't Crash Now!", short: "CCN", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_1.png" }, { id: "68dedebe6eeed293775cc8593ad14e6070a0529dbc7acceec7441c844e41838e", name: "2 - Twisty Twasty", short: "TT", author: "Not So Weekly Shorts", env: "Winter", thumb: "tracks/community/thumbnails/week2_2.png" }, { id: "9af28cca21b8eeb207055536883512df85c6ab31ed380058fec290b6f765e469", name: "3 - A Ternary Trio", short: "ATT", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_3.png" }, { id: "7216b418fb57f0a4b2c2f8083caaa1fc1e54563e9cda00bd85bdea61075d7db2", name: "4 - faht", short: "faht", author: "Not So Weekly Shorts", env: "Desert", thumb: "tracks/community/thumbnails/week2_4.png" }, { id: "c9c0977d2d40c589420482020762af2a09cdf1aa372807377b6fcdeb48bc714d", name: "5 - antiAO8", short: "AO8", author: "Not So Weekly Shorts", env: "Summer", thumb: "tracks/community/thumbnails/week2_5.png" }]
         }
         ];
 

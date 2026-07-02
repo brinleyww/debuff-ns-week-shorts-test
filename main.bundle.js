@@ -49457,16 +49457,32 @@ window.__nswsDecrypt = async function(b64Data) {
                 C.get(this, jo, "f").prepend(document.createTextNode(t.get("Watch"))),
                 C.get(this, jo, "f").addEventListener("click", ( () => {
                     a.playUIClick();
-                    const e = r.getRecord(i.profileSlot, h);
-                    if (null != e) {
-                        const t = i.getCurrentUserProfile();
-                        A([{
-                            recording: e.recording,
-                            carStyle: t.carStyle,
-                            nickname: t.nickname,
-                            time: e.time,
-                            isSelf: !0
-                        }])
+                    const nswsWatchSelected = C.get(this, Jo, "f");
+                    if (nswsWatchSelected.length > 0) {
+                        C.get(this, No, "f").getRecordings(nswsWatchSelected.map((e => e.recordingId))).then((t => {
+                            if (t.some((e => null == e)))
+                                throw new Error("Failed to load at least one recording.");
+                            A(t.filter((e => null != e)).map(( (t, n) => ({
+                                recording: t.recording,
+                                carStyle: t.carStyle,
+                                nickname: nswsWatchSelected[n].nickname,
+                                time: t.time,
+                                isSelf: nswsWatchSelected[n].isSelf
+                            }))))
+                        }
+                        ))
+                    } else {
+                        const e = r.getRecord(i.profileSlot, h);
+                        if (null != e) {
+                            const t = i.getCurrentUserProfile();
+                            A([{
+                                recording: e.recording,
+                                carStyle: t.carStyle,
+                                nickname: t.nickname,
+                                time: e.time,
+                                isSelf: !0
+                            }])
+                        }
                     }
                 }
                 )),
